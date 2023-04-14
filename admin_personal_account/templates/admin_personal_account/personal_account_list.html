@@ -1,0 +1,380 @@
+{% extends 'layout/admin_panel.html' %}
+{% load static %}
+{% block content %}
+
+
+    <div class="row">
+        <!--<div class="col-xs-12 col-sm-6">-->
+        <!--<h2 class="page-header">Квартири</h2>-->
+        <!--</div>-->
+        <div class="col-xs-12 col-lg-9">
+
+            <div class="row">
+                <div class="col-xs-12 col-md-4">
+                    <div class="small-box bg-green overflow-hidden">
+                        <div class="inner">
+                            <h3>{{ transactions_total_balance|floatformat:'2' }} грн</h3>
+                            <p>Стан каси</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fa fa-dollar"></i>
+                        </div>
+                        <!--<span class="small-box-footer"> </span>-->
+                    </div>
+                </div>
+                <div class="col-xs-12 col-md-4">
+                    <div class="small-box bg-blue overflow-hidden">
+                        <div class="inner">
+                            <h3>{{ account_total_balance|floatformat:'2' }} грн</h3>
+                            <p>Баланс за рахунками</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fa fa-dollar"></i>
+                        </div>
+                        <!--<span class="small-box-footer"> </span>-->
+                    </div>
+                </div>
+                <div class="col-xs-12 col-md-4">
+                    <div class="small-box bg-red overflow-hidden">
+                        <div class="inner">
+                            <h3>{{ account_total_debt|floatformat:'2' }} грн</h3>
+                            <p>Заборгованість за рахунками</p>
+                        </div>
+                        <div class="icon">
+                            <i class="fa fa-dollar"></i>
+                        </div>
+                        <!--<span class="small-box-footer"> </span>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-lg-3">
+            <div class="btn-group pull-right margin-bottom">
+                <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                    Виберіть дію <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url 'personal_account_create' %}">Додати особовий рахунок</a></li>
+                    <li><a style="cursor: pointer" id="download_btn" onclick="to_excel()">Вивантажити в Excel</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title"></h3>
+                    <div class="box-tools">
+                        <button onclick="clear_filters()" class="btn btn-default btn-sm">
+                            <span class="hidden-xs">Очистити</span><i class="fa fa-eraser visible-xs"
+                                                                      aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="w0" class="grid-view">
+                    <div class="box-body table-responsive no-padding">
+                        <table class="table table-bordered table-hover table-striped linkedRow" id="account_table">
+                            <thead>
+                            <tr>
+                                <th style="width: 125px; min-width: 125px">№</th>
+                                <th>Статус</th>
+                                <th style="width: 100px; min-width: 100px">Квартира</th>
+                                <th style="min-width: 200px">Будинок</th>
+                                <th style="width: 160px; min-width: 65px">Секція</th>
+                                <th style="min-width: 200px">Власник</th>
+                                <th style="width: 120px; min-width: 120px">Залишок (грн)</th>
+                                <th style="width: 80px; min-width: 80px"> </th>
+                            </tr>
+                            <tr id="w0-filters" class="filters">
+                                <td><input type="text" id="number" class="form-control column_search" name="AccountSearch[uid]"></td>
+                                <td><select id="status" class="form-control select2_status filters" style="width: 100%;">
+                                    <option></option>
+                                    <option>Активний</option>
+                                    <option>Неактивний</option>
+                                </select></td>
+                                <td><input id="apartment" type="text" class="form-control column_search" name="AccountSearch[searchFlat]"></td>
+                                <td><select id="house" class="form-control select2 house_search filters" style="width: 100%;">
+                                    <option></option>
+                                    {% for house in house_list %}
+                                            <option value="{{ house.pk }}">{{ house }}</option>
+                                    {% endfor %}
+                                </select>
+                                </td>
+                                <td><select id="section" class="form-control select2_house filters" style="width: 100%;">
+                                    <option></option>
+                                </select></td>
+                                <td><select id="owner" class="form-control select2 filters" style="width: 100%;">
+                                    <option value=""></option>
+                                        {% for owner in user.get_owners %}
+                                            <option value="{{ owner.pk }}">{{ owner }}</option>
+                                        {% endfor %}
+                                </select></td>
+                                <td><select id="" class="form-control select2 filters" style="width: 100%;">
+                                    <option></option>
+                                </select></td>
+                                <td> </td>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="box-footer clearfix">
+                        <ul class="pagination pagination-sm no-margin pull-right"></ul>
+                    </div>
+                </div>
+                <div class="box-footer">
+                    <div>Кількість рахунків: <span class="text-bold">{{personalaccount_list.count }}</span></div>
+                </div>
+
+            </div>
+        </div>
+    {% csrf_token %}
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    <script>
+        $('#nav_account').attr('class', 'active')
+    </script>
+    <script src="{% static 'admin_panel/bower_components/moment/moment.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/moment/locale/uk.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/select2/dist/js/i18n/uk.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+
+       <script>
+
+        let numb = 0
+        let sort_data = {}
+        let table
+        let table_head = $('#account_table thead')
+        let filters_array
+        let label_colors = {
+            'Активний': 'label-success',
+            'Неактивний': 'label-danger',
+        }
+
+        function check_empty(data) {
+            if (data) {return data}
+            else return '(не вказано)'
+        }
+        function set_options(data, target_id) {
+            $('#'+`{target_id} option`).remove()
+            $('#'+`{target_id}`).append(`<option></option>`)
+            data.forEach(function (item) {
+                                $('#'+`${target_id}`).append(`<option value="${item['id']}">${item['name']}</option>`)
+                            })
+        }
+
+        function clear_filters() {
+            $('.column_search').val('');
+            table_head.unbind();
+            $(`.select2_house option`).remove()
+            $(`.select2_house`).append(`<option></option>`)
+            filters_array.forEach(function(item) {
+              item.val('').change()
+            })
+            $('.ordering').attr('class', 'ordering');
+            set_filters_listener()
+            let keys = Object.keys(sort_data)
+            keys.forEach(function (item) {
+                sort_data[item] = ''
+            })
+            numb = 0
+            table.draw()
+        }
+        function numberWithSpaces(nr) {
+            return nr.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+        let data_account = []
+        function send_POST(e) {
+            table = $('#account_table').DataTable({
+                serverSide: true,
+                processing: false,
+                ordering: false,
+                oLanguage: {
+                    sZeroRecords: "Нічого не знайдено."
+                },
+                columnDefs: [
+                    {className: "account", "targets": [0, 1, 2,3,4,5,6]},
+                    {targets: '_all', defaultContent: ''},
+                ],
+                "ajax": {
+                    "processing": true,
+                    "url": "{% url 'personal_account_list' %}",
+                    "data": function (d) {
+                        return Object.assign(d, sort_data);
+                    },
+                    dataSrc: function (data) {
+                        if(data['sections']) {
+                            $('.select2_house').select2({placeholder: ""})
+                            set_options(data['sections'],'section')
+                        }
+                        data_account=data['account']
+                        return data['account']
+                    },
+                },
+                "columns": [
+                    {data: 'number'},
+                    {data: 'status',
+                    render:function (data) {
+                        return `<small class="label ${label_colors[data]}" id="status">${data}</small>`
+                    }},
+                    {data: 'apartment__number',
+                        render: function (data) {
+                         return check_empty(data)
+                     }},
+                    {data: 'apartment__house__name',
+                        render: function (data) {
+                         return check_empty(data)
+                     }},
+                    {data: 'apartment__section__name',
+                        render: function (data) {
+                         return check_empty(data)
+                     }},
+                    {data: 'owner__name',
+                        render: function (data) {
+                        if (data.replace(/\s/g, '')) {return data}
+                        else return '(не вказано)'
+                     }},
+                    {data: 'balance',
+                        render: function (data) {
+                         {#return 0#}
+                            let text_color = 'default'
+                            if (data > 0) {text_color = 'green'}
+                            else if (data < 0) {text_color = 'red'}
+                            return `<span class="text text-${text_color}">${numberWithSpaces(data)}</span>`
+                        }
+                    },
+                    {
+                        data: 'id',
+                        render: function (data, type) {
+                            let link_update = '{% url 'personal_account_update' 12345 %}'.replace(/12345/, data)
+                            let link_delete = '{% url 'personal_account_delete' 12345 %}'.replace(/12345/, data)
+                            return `<div class="btn-group pull-right">\
+            <a class="btn btn-default btn-sm" href="${link_update}"\
+               title="Редагувати" data-toggle="tooltip">\
+                <i class="fa fa-pencil"></i>\
+            </a>\
+            <a class="btn btn-default btn-sm"\
+               title="Видалити" data-toggle="tooltip" data-pjax="0" data-method="post"\
+                onclick="return confirm_delete('${link_delete}',event);">\
+                <i class="fa fa-trash"></i>\
+            </a>\
+        </div>`
+                        },
+                    },
+                ],
+                paging: true,
+                'pageLength': 10,
+                'lengthChange': false,
+                initComplete: (settings, json) => {
+                    $('.dataTables_paginate').appendTo('.pagination-sm');
+                },
+                searching: false,
+                info: false,
+            });
+        }
+        function set_filters_listener() {
+            table_head.on('change', ".select2", function a(e) {
+            sort_data[this.id] = $(this).val()
+            numb = 0
+            table.draw()
+        });
+            table_head.on('change', ".select2_status", function a(e) {
+            sort_data[this.id] = $(this).val()
+            numb = 0
+            table.draw()
+        });
+        table_head.on('change', ".select2_house", function a(e) {
+            sort_data[this.id] = $(this).val()
+            numb = 0
+            table.draw()
+        });
+        table_head.on('change', ".house_search", function a(e) {
+            sort_data['section'] = ''
+            sort_data[this.id] = $(this).val()
+            if (sort_data[this.id]) {
+                sort_data['house_select'] = true
+            }
+            numb = 0
+            table.draw()
+            sort_data['house_select'] = ''
+        });
+        table_head.on('keyup', ".column_search", function a(e) {
+            sort_data[this.id] = $(this).val()
+            numb = 0
+            table.draw()
+        });
+                table_head.on('click', '.ordering', function() {
+            if (this.className === 'ordering asc') {
+                $(this).attr('class', 'ordering desc')
+                sort_data['order_by'] = '-' + this.id
+            } else {
+                $(this).attr('class', 'ordering asc')
+                sort_data['order_by'] = this.id
+            }
+            table_head.find('.ordering').not(this).attr('class', 'ordering')
+            numb = 0
+            table.draw()
+        })
+                  }
+
+
+
+
+        function confirm_delete(link, event) {
+            alertify.confirm('Підтвердження видалення', 'Видалити будинок <b>'
+                + $(event.target).closest("tr ").children().eq(0).text() + '</b> ?',
+                function () {
+                    window.location.href = link
+                },
+                function () {
+                }).set({labels: {ok: 'Підтвердити', cancel: 'Скасувати'}});
+            return false;
+        }
+
+        $('#account_table').on('click', 'tbody tr .account', function () {
+            window.location.href = '{% url 'personal_account_view' 12345 %}'.replace(/12345/, table.row(this).data().id)
+        })
+
+
+        $(document).ready(function() {
+
+            send_POST();
+            $('.column_search').val('');
+            let $select2 = $('.select2').select2({placeholder: ""}).val('');
+            let $select2_status = $('.select2_status').select2({placeholder: "",minimumResultsForSearch: -1}).val('');
+            let $select2_house = $('.select2_house').select2({placeholder: "Виберіть будинок"}).val('');
+            let $house = $('#house').select2({placeholder: ""});
+            filters_array = [$select2,$select2_house,$house]
+            set_filters_listener()
+
+        });
+        function to_excel() {
+            sort_data['to_excel'] = true
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'personal_account_list' %}",
+            data: sort_data,
+            xhrFields: {responseType: 'blob'},
+            dataType: 'binary',
+            success: function (data) {
+                var a = document.createElement("a");
+                  a.href = URL.createObjectURL(data);
+                  let date = moment().format('L')
+                  let time = moment().format('LT')
+                  a.download = `accounts_${date}_${time}.xlsx`;
+                  a.click();
+                sort_data['to_excel']=''
+            }
+        })
+
+        }
+    </script>
+
+{% endblock %}

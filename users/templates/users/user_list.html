@@ -1,0 +1,226 @@
+{% extends 'layout/admin_panel.html' %}
+{% load static %}
+{% block title %} Користувачі {% endblock %}
+{% block header_text %}
+    Користувачі
+{% endblock %}
+{% block breadcrumb %}
+    <ul class="breadcrumb"><li><a href="{% url 'statistic' %}"><i class="fa fa-home"></i> Головна</a></li>
+<li class="active">Користувачі</li>
+</ul>
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12">
+
+            <div class="pull-right margin-bottom">
+                <a class="btn btn-success" href="{% url 'create_user' %}">Створити користувача</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title"></h3>
+                    <div class="box-tools">
+                        <a onclick="clear_filters()" class="btn btn-default btn-sm">
+                            <span class="hidden-xs">Очистити</span><i class="fa fa-eraser visible-xs"
+                                                                      aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="grid-view">
+                    <div class="box-body table-responsive no-padding">
+                        <table id="users_table" class="table table-bordered table-hover table-striped linkedRow">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Користувач</th>
+                                <th>Роль</th>
+                                <th>Телефон</th>
+                                <th>Email (логін)</th>
+                                <th>Статус</th>
+                                <th style="width: 114px; min-width: 114px"> </th>
+                            </tr>
+                            <tr id="w0-filters" class="filters">
+                                <td> </td>
+                                <td rowspan="1" colspan="1"><input type="text" class="column_search form-control" id="name"></td>
+                                <td><select id="role" class="form-control select2 column_search">
+                                    <option style="background-color: #00a65a;" value=""></option>
+                                    <option style="background-color: #00a65a;" value="Директор">Директор</option>
+                                    <option style="background-color: #00a65a;" value="Керуючий">Керуючий</option>
+                                    <option style="background-color: #00a65a;" value="Бухгалтер">Бухгалтер</option>
+                                    <option style="background-color: #00a65a;" value="Електрик">Електрик</option>
+                                    <option style="background-color: #00a65a;" value="Сантехнік">Сантехнік</option>
+                                </select></td>
+                                <th rowspan="1" colspan="1"><input type="text" class="column_search form-control" id="phone"></th>
+                                <th><input type="text" class="form-control column_search" name="UserAdminSearch[email]" id="username"
+                                           data-index="4"></th>
+                                <th><select id="status" class="form-control select2 column_search">
+                                    <option value=""></option>
+                                    <option value="Активний">Активний</option>
+                                    <option value="Новий">Новий</option>
+                                    <option value="Вимкнений">Вимкнений</option>
+                                </select></th>
+                                <td> </td>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                            <thead>
+                            <tr>
+
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                    <div class="box-footer clearfix">
+                        <ul class="pagination pagination-sm no-margin pull-right"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'admin_panel/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+
+    <script>
+        $('#system_settings').attr('class', 'active treeview menu-open')
+        $('#nav_users').attr('class', 'active')
+    </script>
+        <script src="{% static 'admin_panel/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/select2/dist/js/i18n/uk.js' %}"></script>
+    <script>
+
+    let numb = 0
+    let colors = {
+                'Активний': 'label label-success',
+                'Вимкнений': 'label label-danger',
+                'Новий': 'label label-warning',
+            }
+        let sort_data ={
+            "name":'',
+            "role":'',
+            "phone":'',
+            "username":'',
+            "status":'',
+        }
+        let table
+            function clear_filters() {
+                $('#users_table thead').unbind();
+                $('.column_search').val('').change();
+                sort_data = {
+                "name":'',
+                "role":'',
+                "phone":'',
+                "username":'',
+                "status":'',
+                }
+                $('#users_table thead').on('change', ".column_search", function a (e) {
+                sort_data[this.id] = $(this).val()
+                numb=0
+                table.draw()
+                });
+                numb=0
+                    table.draw()
+
+            }
+
+            function send_POST(e) {
+                table = $('#users_table').DataTable({
+                    serverSide: true,
+                    {#processing: false,#}
+                    oLanguage: {
+                    sZeroRecords: "Нічого не знайдено."
+                    },
+                    columnDefs: [
+                        { className: "user", "targets": [ 0,1,2,3,4,5 ] },
+                        { targets: '_all', defaultContent:''},
+                    ],
+                    "ajax": {
+                        "processing": true,
+                        "url": "{% url 'user_list' %}",
+                        "data": function (d) {
+                            numb = d['start']
+                            return Object.assign(d, sort_data);
+                        },
+                    },
+                    "columns": [
+                        {data: null,
+                        render:function () {
+                            numb++
+                            return numb
+
+                        }},
+                        {"data": "name"},
+                        {"data": "role__role"},
+                        {"data": "phone"},
+                        {"data": "username"},
+                        {data: "status",
+                            render: function (data, type) {
+                        return `<small class="${colors[data]}">${data}</small>`;
+                    },
+                    },
+                        {data: "id",
+                            render:function (data, type) {
+                            let link_update = '{% url 'update_user' 12345 %}'.replace(/12345/, data)
+                            let link_delete = '{% url 'delete_user' 12345 %}'.replace(/12345/, data)
+                            let link_invite = '{% url 'invite_user' 12345 %}'.replace(/12345/, data)
+                                if (data === {{admin.pk}}) {
+                                    return `<div class="btn-group pull-right"><a class="btn btn-default btn-sm" href="${link_invite}" title="Надіслати запрошення" data-toggle="tooltip"> <i class="fa fa-repeat"></i></a> <a class="btn btn-default btn-sm" href="${link_update}" title="Редагувати" data-toggle=" tooltip"><i class="fa fa-pencil"></i></a> <a class="btn btn-default btn-sm disabled" href="${link_delete}" title="Видалити" data -toggle="tooltip" data-pjax="0" id="delete_user" ><i class="fa fa-trash"></i></a></div>`
+                                }
+                                else {
+                                    return `<div class="btn-group pull-right"><a class="btn btn-default btn-sm" href="${link_invite}" title="Надіслати запрошення" data-toggle="tooltip"> <i class="fa fa-repeat"></i></a> <a class="btn btn-default btn-sm" href="${link_update}" title="Редагувати" data-toggle=" tooltip"><i class="fa fa-pencil"></i></a> <a class="btn btn-default btn-sm" title="Видалити" data-toggle="tooltip" data-pjax ="0" id="delete_user" onmousedown="return confirm_delete('${link_delete}',event);"> <i class="fa fa-trash"></i></a></div> `
+                                }
+
+                            },
+                        }
+                            ],
+                    paging: true,
+                    'lengthChange': false,
+                    'pageLength': 10,
+                    searching: false,
+                    ordering: false,
+                    info: false,
+                    initComplete: (settings, json) => {
+                    $('.dataTables_paginate').appendTo('.pagination-sm');
+                },
+                });
+            }
+            $('#users_table thead').on('change', ".column_search", function a (e) {
+                sort_data[this.id] = $(this).val()
+                numb=0
+                table.draw()
+            });
+
+
+
+
+        $(document).ready(function() {
+            $('.select2').select2({placeholder:'Виберіть...'})
+            send_POST();
+            $('.column_search').val('');
+        });
+        function confirm_delete (link, event) {
+            alertify.confirm('Підтвердження видалення', 'Видалити користувача <b>'
+                + $(event.target).closest("tr").children().eq(1).text() + '</b> ?',
+                function () {
+                window.location.href = link
+                },
+                function () {
+                }).set({labels: {ok: 'Підтвердити', cancel: 'Скасувати'}});
+                return false;
+        }
+        $('#users_table').on('click', 'tbody tr .user', function() {
+        window.location.href = '{% url 'view_user' 12345 %}'.replace(/12345/, table.row(this).data().id)
+})
+    </script>
+
+{% endblock %}

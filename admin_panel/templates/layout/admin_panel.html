@@ -1,0 +1,337 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html style="height: auto; min-height: 100%;" lang="ru-RU">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <link rel="icon" type="image/png" href="{% static 'admin_panel/logo-mini.svg' %}">
+    <title>{% block title %}Статистика{% endblock %}</title>
+    <link href="{% static 'admin_panel/bower_components/bootstrap/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'admin_panel/bower_components/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet">
+    <link href="{% static 'admin_panel/bower_components/Ionicons/css/ionicons.min.css' %}" rel="stylesheet">
+    <link href="{% static 'admin_panel/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet"/>
+    <link href="{% static 'admin_panel/dist/css/AdminLTE.min.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'admin_panel/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css' %}">
+    <link href="{% static 'admin_panel/dist/css/skins/_all-skins.min.css' %}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic"
+          rel="stylesheet">
+    <link href="{% static 'admin_panel/plugins/toastr/toastr.min.css' %}" rel="stylesheet">
+    <link href="{% static 'admin_panel/plugins/alertifyjs/css/alertify.min.css' %}" rel="stylesheet">
+    <link href="{% static 'admin_panel/plugins/alertifyjs/css/themes/default.min.css' %}" rel="stylesheet">
+    <link href="{% static 'admin_panel/dist/css/style.css' %}" rel="stylesheet">
+    <style>
+        .has-error .select2-container-default .select2-selection-single {
+            border-color: #dd4b39;
+        }
+
+        .has-success .select2-container--default .select2-selection--single {
+            border-color: #00a65a;
+        }
+        ul.pagination{margin: 0}
+    </style>
+    <style>
+        .ck-editor__editable {
+            min-height: 200px;
+            max-height: 200px;
+        }
+    </style>
+    {% block head %}
+    {% endblock %}
+</head>
+<body class="skin-black-light sidebar-mini fixed sidebar-mini-expand-feature" style="height: auto; min-height: 100%;">
+<div class="wrapper" style="height: auto; min-height: 100%;">
+
+
+    <header class="main-header">
+
+        <!-- Logo -->
+        <a href="{% block logo_url %}{% url 'statistic' %}{% endblock %}" class="logo">
+        <span class="logo-mini">
+            <img src="{% static 'admin_panel/logo-mini.svg' %}" class="img-responsive" alt="">
+        </span>
+            <span class="logo-lg">
+            <img src="{% static 'admin_panel/logo.svg' %}" class="img-responsive" alt="">
+        </span>
+        </a>
+
+        <!-- Header Navbar -->
+        <nav class="navbar navbar-static-top">
+            <!-- Sidebar toggle button-->
+            <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+                <span class="sr-only">Toggle navigation</span>
+            </a>
+            <!-- Header title -->
+            <div class="header-title">{% block nav_header_title %}Панель адміністратора{% endblock %}</div>
+            <!-- Navbar Right Menu -->
+            <div class="navbar-custom-menu">
+                <ul class="nav navbar-nav">
+                    <!-- Notifications -->
+                    {% block notifications %}
+                        <li class="dropdown notifications-menu">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                <i class="fa fa-child fa-lg"></i>
+                                {% with new_users=user.get_new_users %}
+                                    {% with users_count=new_users.count %}
+                                        <span class="label label-warning">{{users_count}}</span>
+                                        </a>
+                                        <ul class="dropdown-menu">
+
+                                        <li class="header">Нових користувачів: {{users_count}}</li>
+                                        <li>
+                                    {% endwith %}
+
+                                    <!-- inner menu: contains the actual data -->
+                                    <ul class="menu">
+                                    {% for new_user in new_users %}
+                                        <li>
+                                            <a href="{% url 'update_user' new_user.pk %}">
+                                                {{ new_user }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                {% endwith %}
+                                </ul>
+                                </li>
+                                <li class="footer"><a href="{% url 'user_list' %}">Перейти до розділу користувачів</a>
+                                </li>
+
+                                </ul>
+                        </li>
+                    {% endblock %}
+                    <!-- User Account -->
+                    <li class="dropdown user user-menu">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                            {% if user.profile_image %}
+                                <img src="{{ user.profile_image.url }}" class="user-image" alt="{{ user }}">
+                            {% else %}
+                                <i class="fa fa-user-circle text-purple"></i>
+                            {% endif %}
+                            <span class="hidden-xs">{{user }}</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <!-- User image -->
+                            <li class="user-header">
+                                {% if user.profile_image %}
+                                    <img src="{{user.profile_image.url}}" class="img-circle" alt="Ава тар">
+                                {% else %}
+                                    <span><i class="fa fa-user- circle text-purple bg-gray-light img-circle"></i></span>
+                                {% endif %}
+                                <p>{{ user }} ({{ user.role }})</p>
+                            </li>
+                            <!-- Menu Footer-->
+                            <li class="user-footer">
+                                <div class="pull-left">
+                                    <a class="btn btn-default btn-flat"
+                                       href="{% block profile_url %}{% url 'update_user' user.pk %}{% endblock %}">
+                                        Профіль</a></div>
+                                <div class="pull-right">
+                                    <a class="btn btn-default btn-flat"
+                                       href="{% block logout_url %}{% url 'admin-panel-logout' %}{% endblock %}">
+                                        Вихід</a>
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+
+        </nav>
+    </header>
+
+
+    <!-- Left side column. contains the logo і sidebar -->
+    <aside class="main-sidebar">
+        <!-- sidebar -->
+        <div class="slimScrollDiv" style="position: relative; overflow: hidden; width: auto; height: 228px;">
+            <section class="sidebar" style="overflow: hidden; width: auto; height: 228px;">
+
+                <ul class="sidebar-menu tree" data-widget="tree">
+                    {% block navigation %}
+                        {% if user.role.statistics %}
+                            <li id="nav_statistic"><a href="/admin/"><i class="fa fa-line-chart"></i>
+                                <span>Статистика</span></a></li>
+                        {% endif %}
+                        {% if user.role.transactions %}
+                            <li id="nav_transaction"><a href="{% url 'transaction_list' %}"><i class="fa fa-dollar"></i>
+                                <span>Каса</span></a>
+                            </li>
+                        {% endif %}
+
+                        {% if user.role.receipts %}
+                            <li id="nav_receipt"><a href="{% url 'receipt_list' %}"><i class="fa fa-files-o"></i>
+                                <span>Квитанції на оплату</span></a></li>
+                        {% endif %}
+                        {% if user.role.personal_accounts %}
+                            <li id="nav_account"><a href="{% url 'personal_account_list' %}"><i
+                                    class="fa fa-credit-card"></i>
+                                <span>Облікові рахунки</span></a></li>
+                        {% endif %}
+                        {% if user.role.apartments %}
+                            <li id="nav_apartment"><a href="{% url 'apartment_list' %}"><i class="fa fa-key"></i>
+                                <span>Квартири</span></a></li>
+                        {% endif %}
+                        {% if user.role.owners %}
+                            <li id="nav_owners"><a href="{% url 'owner_list' %}"><i class="fa fa-users"></i> <span>Власники квартир</span></a >
+                            </li>
+                        {% endif %}
+                        {% if user.role.houses %}
+                            <li id="nav_house"><a href="{% url 'house_list' %}"><i class="fa fa-building"></i>
+                                <span>Будинки</span></a>
+                            </li>
+                        {% endif %}
+                        {% if user.role.messages %}
+                            <li id="nav_message"><a href="{% url 'message_list' %}"><i class="fa fa-envelope-o"></i>
+                                <span>Повідомлення</span></a>
+                            </li>
+                        {% endif %}
+                        {% if user.role.applications %}
+                            <li id="nav_application"><a href="{% url 'application_list' %}"><i class="fa fa-wrench"></i>
+                                <span>Заявки виклику майстра</span></a></li>
+                        {% endif %}
+                        {% if user.role.meters %}
+                            <li id="nav_meter"><a href="{% url 'meter-list' %}"><i class="fa fa-dashboard"></i>
+                                <span>Покази лічильників</span></a>
+                            </li>
+                        {% endif %}
+                        {% if user.role.website %}
+                            <li id="website_settings" class="treeview"><a href="#!">
+                                <i class="fa fa-desktop"></i> <span>Керування сайтом</span>
+                                <span class="pull-right-container"><i
+                                        class="fa fa-angle-left pull-right"></i></span></a>
+                                <ul class="treeview-menu">
+                                    <li id="nav_main_page"><a href="{% url 'website_main_page' %}">
+                                        <i class="fa fa-circle-o"></i>
+                                        <span>Головна сторінка</span></a></li>
+                                    <li id="nav_about_page"><a href="{% url 'website_about_page' %}">
+                                        <i class="fa fa-circle-o"></i> <span>Про нас</span></a>
+                                    </li>
+                                    <li id="nav_services_page"><a href="{% url 'website_services_page' %}">
+                                        <i class="fa fa-circle-o"></i>
+                                        <span>Послуги</span></a>
+                                    </li>
+                                    <li id="nav_tariffs_page"><a href="{% url 'website_tariffs_page' %}">
+                                        <i class="fa fa-circle-o"></i>
+                                        <span>Тарифи</span></a>
+                                    </li>
+                                    <li id="nav_contact_page"><a href="{% url 'website_contact_page' %}">
+                                        <i class="fa fa-circle-o"></i>
+                                        <span>Контакти</span></a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
+                        <li class="treeview" id="system_settings"><a href="#!"><i class="fa fa-cogs"></i>
+                            <span>Налаштування системи</span> <span class="pull-right-container">
+        <i class="fa fa-angle-left pull-right"></i></span></a>
+                            <ul class="treeview-menu">
+
+                                {% if user.role.services %}
+                                    <li id="nav_service"><a href="{% url 'service' %}"><i class="fa fa-briefcase"></i>
+                                        <span>Послуги</span></a>
+                                    </li>
+                                {% endif %}
+                                {% if user.role.tariffs %}
+                                    <li id="nav_tariff"><a href="{% url 'tariff_list' %}"><i class="fa fa-money"></i>
+                                        <span>Тарифи</span></a>
+                                    </li>
+                                {% endif %}
+                                {% if user.role.roles %}
+                                    <li id="nav_roles"><a href="{% url 'roles' %}"><i class="fa fa-user"></i>
+                                        <span>Ролі</span></a>
+                                    </li>
+                                {% endif %}
+                                {% if user.role.users %}
+                                    <li id="nav_users"><a href="{% url 'user_list' %}"><i class="fa fa-user-plus"></i>
+                                        <span>Користувачі</span></a>
+                                    </li>
+                                {% endif %}
+                                {% if user.role.payment_details %}
+                                    <li id="nav_payment_details"><a href="{% url 'payment_details_update' %}"><i
+                                            class="fa fa-credit-card"></i> <span>Платіжні реквізити</span></a></li>
+                                {% endif %}
+                                {% if user.role.payment_details %}
+                                    <li id="nav_purpose"><a href="{% url 'purpose_list' %}"><i
+                                            class="fa fa-list-ol"></i>
+                                        <span>Статті платежів</span></a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                    {% endblock %}
+                </ul>
+            </section>
+            <div class="slimScrollBar"
+                 style="background: rgb(0, 0, 0); width: 7px; position: absolute; top: 0px; opacity: 0.4; display: none; border-radius: 7px; z-index: 99; right: 1px; height: 91.5211px;"></div>
+            <div class="slimScrollRail"
+                 style="width: 7px; height: 100%; position: absolute; top: 0px; display: none; border-radius: 7px; background: rgb(51, 51, 51); opacity: 0.2; z-index: 90 ; right: 1px;"></div>
+        </div>
+        <!-- /.sidebar -->
+    </aside>
+    <div class="content-wrapper" style="min-height: 361px;">
+        <section class="content-header">
+            <h1>
+                {% block header_text %}
+                {% endblock %}
+            </h1>
+            {% block breadcrumb %}
+
+            {% endblock %}
+        </section>
+
+        <section class="content">
+            {% block content %}
+            {% endblock %}
+        </section>
+
+    </div>
+    <footer class="main-footer">
+        Розроблено <a href="https://avada-media.ua/">AVADA-MEDIA</a>. На базі системи керування <a
+            href="https://avada-media.ua/moydom24/">"Home24"</a>.
+        Документація API доступна <a href="/doc">за посиланням</a>.
+    </footer>
+
+</div>
+<script src="{% static 'admin_panel/plugins/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'admin_panel/bower_components/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'admin_panel/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'admin_panel/bower_components/fastclick/lib/fastclick.js' %}"></script>
+<script src="{% static 'admin_panel/dist/js/adminlte.min.js' %}"></script>
+<script src="{% static 'admin_panel/plugins/iCheck/icheck.min.js' %}"></script>
+<script src="{% static 'admin_panel/bower_components/jquery-sparkline/dist/jquery.sparkline.min.js' %}"></script>
+<script src="{% static 'admin_panel/bower_components/jquery-slimscroll/jquery.slimscroll.min.js' %}"></script>
+{#<script src="{% static 'admin_panel/plugins/chart.js/dist/chart.umd.js' %}"></script>#}
+<script src="{% static 'admin_panel/plugins/chart.js/dist/chart.umd.js' %}"></script>
+<script src="{% static 'admin_panel/dist/js/main.js' %}"></script>
+<script src="{% static 'admin_panel/plugins/toastr/toastr.min.js' %}"></script>
+<script src="{% static 'admin_panel/plugins/alertifyjs/alertify.min.js' %}"></script>
+<script src="{% static 'admin_panel/plugins/jquery-validation-1.19.5/dist/jquery.validate.min.js' %}"></script>
+<script src="{% static 'admin_panel/plugins/jquery-validation-1.19.5/dist/localization/messages_uk.js' %}"></script>
+<script>toastr.options = {"positionClass": "toast-bottom-right", "timeOut": "7000",}</script>
+{% if messages %}
+    {% for message in messages %}
+        {{message}}
+        {% if message.tags == 'success' %}
+            <script type=text/javascript>toastr.{{ message.tags }}('{{ message }}')</script>
+        {% elif message.tags == 'info' %}
+            <script type=text/javascript>toastr.{{ message.tags }}('{{ message }}')</script>
+        {% elif message.tags == 'warning' %}
+            <script type=text/javascript>toastr.{{ message.tags }}('{{ message }}')</script>
+        {% elif message.tags == 'error' %}
+            <script type=text/javascript>toastr.{{ message.tags }}('{{ message }}')</script>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+<script>
+    {% for field in form %}
+    {% if field.errors %}
+        {% for error in field.errors %}
+            toastr.error('{{error}}')
+        {% endfor %}
+    {% endif %}
+    {% endfor %}
+</script>
+{% block scripts %}
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,352 @@
+{% extends 'layout/admin_panel.html' %}
+{% load static %}
+{% block title %}Заявки виклику майстра{% endblock %}
+{% block breadcrumb %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'statistic' %}"><i class="fa fa-home"></i>Головна</a></li>
+        <li class="active">Заявки виклику майстра</li>
+    </ul>
+{% endblock %}
+{% block header_text %}
+    Заявки виклику майстра
+{% endblock %}
+{% block head %}
+    <link rel="stylesheet" type="text/css" href="{% static 'admin_panel/bower_components/daterangepicker/daterangepicker.css' %}" />
+{% endblock %}
+{% block content %}
+
+
+    <div class="row">
+        <!--<div class="col-xs-12 col-sm-6">-->
+        <!--<h2 class="page-header">Виклик майстра</h2>-->
+        <!--</div>-->
+        <div class="col-xs-12">
+
+            <div class="pull-right margin-bottom">
+                <a class="btn btn-success" href="{% url 'application_create' %}">Додати заявку</a>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title"></h3>
+                    <div class="box-tools">
+                        <button onclick="clear_filters()" class="btn btn-default btn-sm">
+                            <span class="hidden-xs">Очистити</span><i class="fa fa-eraser visible-xs" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="w0" class="grid-view">
+                    <div class="box-body table-responsive no-padding">
+                        <table class="table table-bordered table-hover table-striped linkedRow nowrap" id="application_table">
+                            <thead>
+                            <tr>
+                                <th style="width: auto; min-width: 100px;">
+                                    <a id="pk" class="ordering desc" style="cursor: pointer">№ заявки</a></th>
+                                <th style="width: auto; min-width: 135px">
+                                    <a id="apartment__number" class="ordering" style="cursor: pointer">
+                                        Зручний час</a></th>
+                                <th style="min-width: 125px">
+                                    <a id="id" class="ordering" style="cursor: pointer">Тип майстра</a></th>
+                                <th style="min-width: 100px">Опис</th>
+                                <th>Квартира</th>
+                                <th style="min-width: 200px">Власник</th>
+                                <th>Телефон</th>
+                                <th style="min-width: 125px">Майстер</th>
+                                <th style="width: auto; min-width: 135px">Статус</th>
+                                <th style="width: auto; min-width: 80px"> </th>
+                            </tr>
+                            <tr id="w0-filters" class="filters">
+                                <td><input type="text" class="form-control column_search" id="id"></td>
+                                <td><input type="text" id="date_range" class="form-control date_range"></td>
+                                <td><select id="master_type" class="form-control select2 filter">
+                                    <option value=""></option>
+                                    {% for type in master_type_list %}
+                                        <option value="{{type}}">{{ type}}</option>
+                                    {% endfor %}
+
+                                </select></td>
+                                <td><input type="text" class="form-control column_search" id="description">
+                                </td>
+                                <td><input type="text" class="form-control column_search" id="apartment"></td>
+                                <td><select id="owner_id"
+                                            class="form-control select2 filter">
+                                    <option value=""></option>
+                                    {% for owner in owner_list %}
+                                            <option value="{{ owner.pk }}">{{ owner }}</option>
+                                    {% endfor %}
+                                </select></td>
+                                <td><input type="text" class="form-control column_search" id="owner_phone">
+                                </td>
+                                <td><select id="master_id"
+                                            class="form-control select2 filter">
+                                    <option value=""></option>
+                                    {% for master in master_list %}
+                                                <option value="{{master.pk}}">{{master.role.role}} - {{master}}</option>
+                                    {% endfor %}
+                                </select></td>
+                                <td> <select id="status"
+                                            class="form-control select2 filter">
+                                <option value=""></option>
+                                    {% for status in status_list %}
+                                            <option value="{{ status }}">{{ status }}</option>
+                                    {% endfor %}
+                                </select></td>
+                                <td> </td>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="box-footer clearfix">
+                        <ul class="pagination pagination-sm no-margin pull-right"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    <script>
+        $('#nav_application').attr('class', 'active')
+    </script>
+
+    <script src="{% static 'admin_panel/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/select2/dist/js/i18n/uk.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+
+   <script src="{% static 'admin_panel/bower_components/moment/moment.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/moment/locale/uk.js' %}"></script>
+    <script type="text/javascript"
+            src="{% static 'admin_panel/bower_components/daterangepicker/daterangepicker.js' %}"></script>
+    <script>
+        let numb = 0
+        let sort_data = {}
+        let table
+        let table_head = $('#application_table thead')
+        let label_colors = {
+            'Виконано': 'label-success',
+            'У роботі': 'label-primary',
+            'Нове': 'label-warning',
+        }
+
+        function check_empty(data) {
+            if (data) {
+                return data
+            } else return '(не вказано)'
+        }
+
+        function set_options(data, target_id) {
+            $('#' + `${target_id} option`).remove()
+            $('#' + `${target_id}`).append(`<option></option>`)
+            data.forEach(function (item) {
+                $('#' + `${target_id}`).append(`<option value="${item['id']}">${item['name']}</option>`)
+            })
+        }
+
+        function clear_filters() {
+            $('.column_search').val('');
+            $('.date_range').val('');
+            table_head.unbind();
+            $('.filter').val('').change()
+{% comment %} filters_array.forEach(function (item) {
+                item.val('').change()
+            }) {% endcomment %}
+            $('.ordering').attr('class', 'ordering');
+            set_filters_listener()
+            let keys = Object.keys(sort_data)
+            keys.forEach(function (item) {
+                sort_data[item] = ''
+            })
+            sort_data['master_type_change'] = 'True'
+            numb = 0
+            table.draw()
+            sort_data['master_type_change'] = ''
+
+        }
+
+        function send_POST(e) {
+            table = $('#application_table').DataTable({
+                serverSide: true,
+                processing: false,
+                ordering: false,
+                oLanguage: {
+                    sZeroRecords: "Нічого не знайдено."
+                },
+                columnDefs: [
+                    {className: "application", "targets": [0, 1, 2, 3, 4, 5,6,7,8]},
+                    {targets: '_all', defaultContent: ''},
+                ],
+                "ajax": {
+                    "processing": true,
+                    "url": "{% url 'application_list' %}",
+                    "data": function (d) {
+                        return Object.assign(d, sort_data);
+                    },
+                    dataSrc: function (data) {
+                        if (data['masters']) {
+                            set_options(data['masters'], 'master_id')
+                        }
+                        console.log(data)
+                        return data['application']
+                    },
+                },
+                "columns": [
+                    {data: 'id'},
+                    {data: 'date',
+                    render:function (data, type, row) {
+                        return moment(`${data} ${row['time']}`).format('DD.MM.YYYY - H:mm')
+                    }},
+                    {data: 'master_type'},
+                    {data: 'description'},
+                    {data: 'apartment_info',
+                    render:function (data, type, row) {
+                        let link = '{% url 'apartment_view' 12345 %}'.replace(/12345/,row['apartment_id'])
+                        return `<a href="${link}">${data}</a>`
+                    }},
+                    {data: 'owner__first_name',
+                        render:function (data, type, row) {
+                        let link = '{% url 'owner_view' 12345 %}'.replace(/12345/,row['owner_id'])
+                            return `<a href="${link}">${data + ` ${row['owner__last_name']}`}</a>`
+                        }
+                    },
+                    {data: 'owner__phone',
+                    render: function (data) {
+                            return check_empty(data)
+                        }},
+                    {data: 'master__first_name',
+                        render:function (data, type, row) {
+                        let link = '{% url 'view_user' 12345 %}'.replace(/12345/,row['master_id'])
+                            return `<a href="${link}">${data + ` ${row['master__last_name']}`}</a>`
+                        }
+                    },
+                    {
+                        data: 'status',
+                        render: function (data) {
+                            return `<small class="label ${label_colors[data]}">${data}</small>`
+                        }
+                    },
+                    {
+                        data: 'id',
+                        render: function (data, type, row) {
+
+                            let link_delete = '{% url 'application_delete' 12345 %}'.replace(/12345/, data)
+                            let link_update = '{% url 'application_update' 12345 %}'.replace(/12345/, data)
+                            return `<div class="btn-group pull-right">\
+            <a class="btn btn-default btn-sm" href="${link_update}"\
+               title="Редагувати" data-toggle="tooltip">\
+                <i class="fa fa-pencil"></i>\
+            </a>\
+            <a class="btn btn-default btn-sm"\
+               title="Видалити" data-toggle="tooltip" data-pjax="0" data-method="post"\
+                onclick="return confirm_delete('${link_delete}',event);">\
+                <i class="fa fa-trash"></i>\
+            </a>\
+        </div>`
+                        },
+                    },
+                ],
+                paging: true,
+                'pageLength': 10,
+                'lengthChange': false,
+                initComplete: (settings, json) => {
+                    $('.dataTables_paginate').appendTo('.pagination-sm');
+                },
+                searching: false,
+                info: false,
+            });
+        }
+
+        function set_filters_listener() {
+            table_head.on('change', ".filter", function a(e) {
+                sort_data[this.id] = $(this).val()
+                numb = 0
+                if (this.id==="master_type"){
+                    sort_data['master_type_change'] = 'True'
+                    table.draw()
+                    sort_data['master_type_change'] = ''
+                }
+                else {
+                    table.draw()
+                }
+            });
+            table_head.on('keyup', ".column_search", function a(e) {
+                sort_data[this.id] = $(this).val()
+                numb = 0
+                table.draw()
+            });
+            table_head.on('click', '.ordering', function() {
+                if (this.className === 'ordering asc') {
+                    $(this).attr('class', 'ordering desc')
+                    sort_data['order_by'] = '-' + this.id
+                } else {
+                    $(this).attr('class', 'ordering asc')
+                    sort_data['order_by'] = this.id
+                }
+                table_head.find('.ordering').not(this).attr('class', 'ordering')
+                numb = 0
+                table.draw()
+            })
+
+        }
+
+
+        function confirm_delete(link, event) {
+            alertify.confirm('Підтвердження видалення', 'Видалити заявку <b>№'
+                + $(event.target).closest("tr ").children().eq(0).text() + '</b> ?',
+                function () {
+                    window.location.href = link
+                },
+                function () {
+                }).set({labels: {ok: 'Підтвердити', cancel: 'Скасувати'}});
+            return false;
+        }
+
+                $('#application_table').on('click', 'tbody tr .application', function () {
+                    window.location.href = '{% url 'application_view' 12345%}'
+                        .replace(/12345/, table.row(this).data().id)
+                })
+
+
+        $(document).ready(function() {
+
+            send_POST();
+            $('.column_search').val('');
+            $('.select2').select2().val('');
+            set_filters_listener()
+            $(function () {
+                let input = $('#date_range')
+                input.daterangepicker({
+                    autoUpdateInput: false,
+                    locale: {
+
+                        cancelLabel: 'Скасувати',
+                        applyLabel: 'Застосувати'
+                    },
+                    applyButtonClasses:'btn btn-success',
+                    cancelButtonClasses:'btn btn-default',
+                });
+                input.on('apply.daterangepicker', function (ev, picker) {
+                    $(this).val(picker.startDate.format('DD/MM/YYYY') + '-' + picker.endDate.format('DD/MM/YYYY'));
+                    sort_data['date_range'] = [picker.startDate.format('YYYY-MM-DD'), picker.endDate.format('YYYY-MM-DD')]
+                    console.log(sort_data[this.id])
+                    numb = 0
+                    table.draw()
+                });
+
+                input.on('cancel.daterangepicker', function (ev, picker) {
+                    $(this).val('');
+                });
+
+            });
+        });
+    </script>
+
+{% endblock %}

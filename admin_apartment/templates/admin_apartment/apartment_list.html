@@ -1,0 +1,331 @@
+{% extends 'layout/admin_panel.html' %}
+{% load static %}
+{% block title %}Квартири{% endblock %}
+{% block breadcrumb %}
+        <ul class="breadcrumb">
+        <li><a href="{% url 'statistic' %}"><i class="fa fa-home"></i>Головна</a></li>
+        <li class="active">Квартири</li>
+</ul>
+{% endblock %}
+{% block header_text %}
+Квартири
+{% endblock %}
+
+{% block content %}
+
+
+    <div class="row">
+        <!--<div class="col-xs-12 col-sm-6">-->
+        <!--<h2 class="page-header">Квартири</h2>-->
+        <!--</div>-->
+        <div class="col-xs-12">
+
+            <div class="pull-right margin-bottom">
+                <a class="btn btn-success" href="{% url 'apartment_create' %}">Додати квартиру</a>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title"></h3>
+                    <div class="box-tools">
+                        <button onclick="clear_filters()" class="btn btn-default btn-sm">
+                            <span class="hidden-xs">Очистити</span><i class="fa fa-eraser visible-xs"
+                                                                      aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="w0" class="grid-view">
+                    <div class="box-body table-responsive no-padding">
+                        <table id="apartment_table" class="table table-bordered table-hover table-striped linkedRow">
+                            <thead>
+                            <tr>
+                                <th><a id="number" class="ordering" style="cursor: pointer">№ квартири</a> </th>
+                                <th><a id="house__name" class="ordering" style="cursor: pointer">Будинок</a> </th>
+                                <th><a id="section__name" class="ordering" style="cursor: pointer">Секція</a> </th>
+                                <th><a id="floor__name" class="ordering" style="cursor: pointer">Поверх</a> </th>
+                                <th><a id="owner__name" class="ordering" style="cursor: pointer">Власник</a> </th>
+                                <th style="width: 120px; min-width: 120px">Залишок (грн)</th>
+                                <th style="width: 80px; min-width: 80px"> </th>
+                            </tr>
+                            <tr id="w0-filters" class="filters">
+                                <td><input id="number" type="text"
+                                           class="form-control column_search" name="ApartmentNumber"></td>
+                                <td><select id="house" class="form-control house_search filters" style="width: 100%;">
+                                    <option></option>
+                                    {% for house in house_list %}
+                                            <option value="{{ house.pk }}">{{ house }}</option>
+                                    {% endfor %}
+
+                                </select></td>
+                                <td>
+                                    <select id="section" class="form-control select2_house filters" style="width: 100%;"
+                                            name="FlatSearch[section_id]">
+                                    <option></option>
+                                </select></td>
+                                <td>
+                                    <select id="floor" class="form-control select2_house filters" style="width: 100%;">
+                                    <option></option>
+                                </select>
+                                </td>
+                                <td>
+                                    <select id="owner" class="form-control select2 filters" style="width: 100%;">
+                                    <option value=""></option>
+                                        {% for owner in user.get_owners %}
+                                            <option value="{{ owner.pk }}">{{ owner }}</option>
+                                        {% endfor %}
+
+                                </select>
+                                    </td>
+                                <td><select id="flatsearch-searchhasdebt" class="form-control select2-hidden-accessible"
+                                            name="FlatSearch[searchHasDebt]" data-s2-options="s2options_7ebc6538"
+                                            data-krajee-select2="select2_0d896465" style="display:none" tabindex="-1"
+                                            aria-hidden="true">
+                                    <option></option>
+                                    <option value="1">Є борг</option>
+                                    <option value="0">Немає боргу</option>
+                                </select><span class="select2 select2-container select2-container--default" dir="ltr"
+                                               style="width: 100%;"><span class="selection"><span
+                                        class="select2-selection select2-selection--single" role="combobox"
+                                        aria-haspopup="true" aria-expanded="false" tabindex="0"
+                                        aria-labelledby="select2-flatsearch-searchhasdebt-container"><span
+                                        class="select2-selection__rendered"
+                                        id="select2-flatsearch-searchhasdebt-container"><span
+                                        class="select2-selection__placeholder"></span></span><span
+                                        class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span
+                                        class="dropdown-wrapper" aria-hidden="true"></span></span></td>
+                                <td> </td>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="box-footer clearfix">
+                        <ul class="pagination pagination-sm no-margin pull-right"></ul>
+                    </div>
+                </div>
+                <div class="box-footer">
+                    <div>Кількість квартир: <span class="text-bold">{{ apartment_list.count }}</span></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $('#nav_apartment').attr('class', 'active')
+    </script>
+
+<script src="{% static 'admin_panel/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
+<script src="{% static 'admin_panel/bower_components/select2/dist/js/i18n/uk.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+
+    <script>
+
+        let numb = 0
+        let sort_data = {
+            "order_by": ''
+        }
+        let table
+        let table_head = $('#apartment_table thead')
+        let filters_array
+
+        function check_empty(data) {
+            if (data) {return data}
+            else return '(не вказано)'
+        }
+        function set_options(data, target_id) {
+            $(`#${target_id} option`).remove()
+            $(`#${target_id}`).append(`<option></option>`)
+            data.forEach(function (item) {
+                                $(`#${target_id}`).append(`<option value="${item['id']}">${item['name']}</option>`)
+                            })
+        }
+
+        function clear_filters() {
+            $('.column_search').val('');
+            table_head.unbind();
+            $(`.select2_house option`).remove()
+            $(`.select2_house`).append(`<option></option>`)
+            filters_array.forEach(function(item) {
+              item.val('').change()
+            })
+            $('.ordering').attr('class', 'ordering');
+            set_filters_listener()
+            let keys = Object.keys(sort_data)
+            keys.forEach(function (item) {
+                sort_data[item] = ''
+            })
+            numb = 0
+            table.draw()
+
+        }
+        function numberWithSpaces(nr) {
+            return nr.toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+
+        function send_POST(e) {
+            table = $('#apartment_table').DataTable({
+                serverSide: true,
+                processing: false,
+                ordering: false,
+                oLanguage: {
+                    sZeroRecords: "Нічого не знайдено."
+                },
+                columnDefs: [
+                    {className: "apartment", "targets": [0, 1, 2,3,4,5]},
+                    {targets: '_all', defaultContent: ''},
+                ],
+                "ajax": {
+                    "processing": true,
+                    "url": "{% url 'apartment_list' %}",
+                    "data": function (d) {
+                        return Object.assign(d, sort_data);
+                    },
+                    dataSrc: function (data) {
+                        if(data['sections']) {
+                            $('.select2_house').select2({placeholder: ""})
+                            set_options(data['sections'],'section')
+                            set_options(data['floors'],'floor')
+                        }
+                        return data['apartment']
+                    },
+                },
+                "columns": [
+                    {data: 'number'},
+                    {data: 'house__name'},
+                    {data: 'section__name',
+                        render: function (data) {
+                         return check_empty(data)
+                     }},
+                    {data: 'floor__name',
+                     render:function (data) {
+                         return check_empty(data)
+                     }},
+                    {data: 'owner__name',
+                        render: function (data) {
+                        if (data.replace(/\s/g, '')) {return data}
+                        else return '(не вказано)'
+                     }},
+                    {data: 'balance',
+                    render: function (data) {
+                            let text_color = 'default'
+                            if (data === '(немає рахунки)'){
+                                return `<span class="text">${data}</span>`}
+                            else if (data > 0) {text_color = 'green'}
+                            else if (data < 0) {text_color = 'red'}
+                            return `<span class="text text-${text_color}">${numberWithSpaces(data)}</span>`
+                        }},
+                    {
+                        data: 'id',
+                        render: function (data, type) {
+                            let link_update = '{% url 'apartment_update' 12345 %}'.replace(/12345/, data)
+                            let link_delete = '{% url 'apartment_delete' 12345 %}'.replace(/12345/, data)
+                            return `<div class="btn-group pull-right">\
+            <a class="btn btn-default btn-sm" href="${link_update}"\
+               title="Редагувати" data-toggle="tooltip">\
+                <i class="fa fa-pencil"></i>\
+            </a>\
+            <a class="btn btn-default btn-sm"\
+               title="Видалити" data-toggle="tooltip" data-pjax="0" data-method="post"\
+                onclick="return confirm_delete('${link_delete}',event);">\
+                <i class="fa fa-trash"></i>\
+            </a>\
+        </div>`
+                        },
+                    },
+                ],
+                paging: true,
+                'pageLength': 10,
+                'lengthChange': false,
+                initComplete: (settings, json) => {
+                    $('.dataTables_paginate').appendTo('.pagination-sm');
+                },
+                searching: false,
+                info: false,
+            });
+        }
+        function set_filters_listener() {
+            table_head.on('change', ".select2", function a(e) {
+            sort_data[this.id] = $(this).val()
+            numb = 0
+            table.draw()
+        });
+        table_head.on('change', ".select2_house", function a(e) {
+            sort_data[this.id] = $(this).val()
+            numb = 0
+            table.draw()
+        });
+        table_head.on('change', ".house_search", function a(e) {
+            sort_data['section'] = ''
+            sort_data['floor'] = ''
+            sort_data[this.id] = $(this).val()
+            if (sort_data[this.id]) {
+                sort_data['house_select'] = true
+            }
+            numb = 0
+            table.draw()
+            sort_data['house_select'] = ''
+        });
+        table_head.on('keyup', ".column_search", function a(e) {
+            sort_data[this.id] = $(this).val()
+            numb = 0
+            table.draw()
+        });
+                table_head.on('click', '.ordering', function() {
+            if (this.className === 'ordering asc') {
+                $(this).attr('class', 'ordering desc')
+                sort_data['order_by'] = '-' + this.id
+            } else {
+                $(this).attr('class', 'ordering asc')
+                sort_data['order_by'] = this.id
+            }
+            table_head.find('.ordering').not(this).attr('class', 'ordering')
+            numb = 0
+            table.draw()
+        })
+                  }
+
+
+
+
+        function confirm_delete(link, event) {
+            alertify.confirm('Підтвердження видалення', 'Видалити будинок <b>'
+                + $(event.target).closest("tr ").children().eq(1).text() + '</b> ?',
+                function () {
+                    window.location.href = link
+                },
+                function () {
+                }).set({labels: {ok: 'Підтвердити', cancel: 'Скасувати'}});
+            return false;
+        }
+
+        $('#apartment_table').on('click', 'tbody tr .apartment', function () {
+            window.location.href = '{% url 'apartment_view' 12345 %}'.replace(/12345/, table.row(this).data().id)
+        })
+
+
+        $(document).ready(function() {
+
+            send_POST();
+            $('.column_search').val('');
+            let $select2 = $('.select2').select2({placeholder: ""}).val('');
+            let $select2_house = $('.select2_house').select2({placeholder: "Виберіть будинок"}).val('');
+            let $house = $('#house').select2({placeholder: ""});
+            filters_array = [$select2,$select2_house,$house]
+            set_filters_listener()
+            {#$('#section__name').select2();#}
+            {#$('#floor__name').select2();#}
+            {#$('#owner__name').select2();#}
+        });
+    </script>
+
+{% endblock %}

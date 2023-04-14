@@ -1,0 +1,201 @@
+{% extends 'layout/admin_panel.html' %}
+{% load static %}
+{% block content %}
+    <form id="personal_account_form" method="post">
+        {% csrf_token %}
+        <div class="row">
+    <div class="col-xs-12 col-md-7 col-lg-6">
+        <div class="page-header-spec">
+            <div class="form-group field-account-uid required">
+<div class="input-group">
+                        <div class="input-group-addon">
+                            №
+                        </div>{{ form.number }}
+                    </div>
+</div> </div>
+    </div>
+</div>
+<div class="box">
+    <div class="box-body">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="form-group field-account-status has-success">
+<label class="control-label" for="account-status">Статус</label>
+                    {{form.status}}
+
+
+<div class="help-block"></div>
+</div> <div class="form-group">
+                    <label for="id_house">Будинок</label>
+                {{form.house}}
+           </div>
+                <div class="form-group">
+                    <label for="id_section">Секція</label>
+                    <select id="id_section" class="form-control" name="section" >
+                        <option value=""></option>
+</select> </div>
+                <div class="form-group field-account-flat_id">
+<label class="control-label" for="account-flat_id">Квартира</label>
+{{form.apartment}}
+
+                    <div class="help-block"></div>
+                </div>
+                <p><b>Власник:</b> <span id="user-fullname"></span>
+                </p>
+                <p><b>Телефон:</b> <span id="user-phone"></span></p>
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-xs-12 text-right">
+                <div class="form-group">
+                    <a href="{% url 'personal_account_list' %}" class="btn btn-default">Скасувати</a>
+                    <button type="submit" class="btn btn-success">Зберегти</button>
+                </div>
+            </div>
+        </div>
+            </div>
+</div>
+
+    </form>
+
+{% endblock %}
+{% block scripts %}
+        <script>
+        $('#nav_account').attr('class', 'active')
+    </script>
+    <script src="{% static 'admin_panel/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
+<script src="{% static 'admin_panel/bower_components/select2/dist/js/i18n/uk.js' %}"></script>
+    <script>
+    let select_options = {
+        'house_id':'',
+        'section_id':''
+    }
+    let apartments_data
+        function clear_options(target_id) {
+            $('#' + `${target_id} option:not([value=''])`).remove()
+        }
+        function clear_owner_info(){
+            $('#user-fullname a').remove()
+            $('#user-phone a').remove()
+        }
+    function get_values() {
+        $.ajax({
+            type: 'GET',
+            url: {% block ajax_url %} '{% url 'personal_account_create' %}' {% endblock %},
+            data: select_options,
+            success: function (data) {
+                clear_owner_info()
+                clear_options('id_apartment')
+                apartments_data = data['apartment']
+                console.log(data)
+                console.log(apartments_data)
+                if(!select_options['section_id']){
+                    clear_options('id_section')
+                                    data['section'].forEach(
+                    function (item) {
+                        $('#id_section').append($('<option>').val(item['id']).text(item['name']));
+                    }
+                );
+                }
+
+                data['apartment'].forEach(
+                    function (item) {
+                        $('#id_apartment').append($('<option>').val(item['id']).text(item['number']));
+                    }
+                );
+            }
+        })
+    }
+    $('#id_house').change(function() {
+        select_options['house_id'] = this.value
+        select_options['section_id'] = ''
+        get_values()
+    })
+    $('#id_section').change(function() {
+        select_options['section_id'] = this.value
+        get_values()
+    })
+    $('#id_apartment').change(function() {
+        let apartment_id = this.value
+        clear_owner_info()
+        apartments_data.forEach(function (item) {
+            if(item['id'] == apartment_id){
+                let link = '{% url 'owner_view' 12345 %}'.replace('12345',item['owner'])
+                $('#user-fullname').append(`<a href="${link}">${item['owner__first_name']} ${item['owner__middle_name']} ${item['owner__last_name'] }</a>`)
+                $('#user-phone').append(`<a href="tel:${item['owner__phone']}">${item['owner__phone']}</a>`)
+                return null
+            }
+        })
+    })
+
+        $(document).ready(function ()
+            {
+
+                $('#id_house').select2({placeholder: "Виберіть..."}).val('')
+                $('#id_section').select2({placeholder: "Виберіть..."}).val('')
+                $('#id_apartment').select2({placeholder: "Виберіть..."}).val('')
+                clear_options('id_apartment')
+                clear_options('id_section')
+            }
+
+        )
+
+
+    </script>
+  <script>
+
+
+            $( "#personal_account_form" ).validate( {
+rules: {
+number: {required:true,min:0},
+{#apartment: "required",#}
+{#house: "required",#}
+{#section: "required",#}
+area: {min:0},
+},
+messages: {
+number: "Будь ласка, введіть номер особового рахунку.",
+{#house: "Будь ласка, виберіть будинок.",#}
+{#apartment: "Будь ласка, виберіть квартиру.",#}
+{#section: "Будь ласка, виберіть секцію.",#}
+},
+errorElement: "em",
+errorPlacement: function ( error, element ) {
+error.addClass( "help-block");
+element.parents( ".form-group" ).addClass( "has-feedback" );
+if ( element.prop( "type" ) === "checkbox" ) {
+error.insertAfter( element.parent( "label" ) );
+} else {
+                        if($(element).hasClass('select2-hidden-accessible')){
+                            error.insertAfter( $(element).parent('.form-group').find('.select2') );
+                        }
+                        else error.insertAfter( element );
+}
+
+
+{% comment %} if (!element.next("span") [0]) {
+$( "<span class='glyphicon glyphicon-remove form-control-feedback'></span>" ).insertAfter( element );
+}{% endcomment %}
+},
+success: function ( label, element ) {
+{% comment %}
+if ( !$( element ).next( "span" )[ 0 ] ) {
+$( "<span class='glyphicon glyphicon-ok form-control-feedback'></span>" ).insertAfter( $( element ) );
+}{% endcomment %}
+},
+highlight: function ( element, errorClass, validClass ) {
+$( element ).parents( ".form-group" ).addClass( "has-error" ).removeClass( "has-success" );
+{#$( element ).next( "span" ).addClass( "glyphicon-remove" ).removeClass( "glyphicon-ok" );#}
+},
+unhighlight: function ( element, errorClass, validClass ) {
+$( element ).parents( ".form-group" ).addClass( "has-success" ).removeClass( "has-error" );
+{#$( element ).next( "span" ).addClass( "glyphicon-ok" ).removeClass( "glyphicon-remove" );#}
+}
+} );
+             $("select").on("select2:close", function (e) {
+        $(this).valid();
+    });
+    </script>
+
+{% endblock %}

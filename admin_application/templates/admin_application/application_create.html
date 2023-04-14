@@ -1,0 +1,300 @@
+{% extends 'layout/admin_panel.html' %}
+{% load static %}
+{% block title %}Нова заявка{% endblock %}
+{% block breadcrumb %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'statistic' %}"><i class="fa fa-home"></i>Головна</a></li>
+        <li><a href="{% url 'application_list' %}">Заявки виклику майстра</a></li>
+        <li class="active">Нова заявка</li>
+    </ul>
+{% endblock %}
+{% block header_text %}
+    Нова заявка
+{% endblock %}
+{% block head %}
+<link rel="stylesheet"
+      href="{% static 'admin_panel/plugins/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css' %}"/>
+    <style>
+    .ck-editor__editable_inline {
+    min-height: 200px;
+    }
+    </style>
+{% endblock %}
+{% block content %}
+    <form id="application_form" method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-xs-12 col-md-7 col-lg-6">
+                <div class="page-header-spec">
+                    <div class="form-group master-date">
+                        <div id="application_date" class="input-group date">
+                            {{form.date}}
+                            <span class="input-group-addon kv-date-calendar" title="Вибрати дату"><i
+                                class="glyphicon glyphicon-calendar"></i></span></div>
+                    </div>
+                    <span class="label-mid">від</span>
+                    <div class="form-group master-time">
+
+                        <div id="application_time" class="input-group date">
+                            {{form.time}}
+                            <span class="input-group-addon" title="Вибрати час">
+                                <i class="fa fa-clock-o"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="box">
+            <div class="box-body">
+                <div class="row">
+
+                    <div class="col-xs-12 col-md-6">
+                        <div class="form-group">
+                            <label for="user_id">Власник квартири</label>
+                            {{form.owner}}
+                            </div>
+                    </div>
+
+                        <div class="col-xs-12 col-md-6">
+                    {% block update %}
+                    {% endblock %}
+                        </div>
+
+                    <div class="clearfix"></div>
+
+                    <div class="col-xs-12 col-sm-6">
+                        <div class="form-group field-masterrequest-description">
+                            <label class="control-label" for="masterrequest-description">Опис</label>
+                            {{form.description}}
+                            <div class="help-block"></div>
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-sm-6">
+                        <div class="form-group field-masterrequest-flat_id">
+                            <label class="control-label" for="masterrequest-flat_id">Квартира</label>
+                            {{form.apartment}}
+
+                            <div class="help-block"></div>
+                        </div>
+                        <div class="form-group field-master-type">
+                            <label class="control-label" for="master-type">Тип майстра</label>
+                            {{form.master_type}}
+
+                            <div class="help-block"></div>
+                        </div>
+                        <div class="form-group field-masterrequest-status">
+                            <label class="control-label" for="masterrequest-status">Статус</label>
+                            {{form.status}}
+
+                            <div class="help-block"></div>
+                        </div>
+                        <div class="form-group field-masterrequest-user_admin_id">
+                            <label class="control-label" for="masterrequest-user_admin_id">Майстер</label>
+                            {{form.master}}
+
+                            <div class="help-block"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="form-group master-comment">
+                            <label class="control-label" for="master-comment">Коментар</label>
+                            <div id="cke_comment">
+                                {{form.comment}}
+                            </div>
+
+
+
+                            <div class="help-block"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 text-right">
+                        <div class="form-group">
+                            <a href="{% url 'application_list' %}" class="btn btn-default">Скасувати</a>
+                            <button type="submit" class="btn btn-success" >Зберегти</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+{% endblock %}
+
+{% block scripts %}
+
+    <script>
+        $('#nav_application').attr('class', 'active')
+    </script>
+    <script src="{% static 'admin_panel/bower_components/moment/moment.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/moment/locale/uk.js' %}"></script>
+    <script src="{% static 'admin_panel/plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/select2/dist/js/i18n/uk.js' %}"></script>
+    <script type="text/javascript" src="{% static "admin_panel/plugins/ckeditor5-build-classic/ckeditor.js" %}"></script>
+    <script type="text/javascript" src="{% static "admin_panel/plugins/ckeditor5-build-classic/translations/ru.js" %}"></script>
+    <script>
+    ClassicEditor.create( document.querySelector( '#id_comment' ),{
+            language: 'ru',
+        toolbar:{
+        items: [
+'heading',
+'|',
+'bold',
+'italic',
+'underline',
+'link',
+'bulletedList',
+'numberedList',
+'|',
+'outdent',
+'indent',
+'|',
+'blockQuote',
+'undo',
+'redo'
+]
+        }
+        } )
+        .catch (error => {
+            console.error(error);
+        } );
+
+             $(function () {
+             $('#application_date').datetimepicker({
+                     {#minDate: moment(),#}
+                     locale: 'uk',
+                     format: 'L',
+                 }
+             );
+             $('#application_time').datetimepicker({
+                     {#maxDate: moment(),#}
+                     locale: 'uk',
+                     format: 'HH:mm',
+                    stepping:'15',
+                 }
+             );
+         });
+    </script>
+    <script>
+        if(!$('#id_date').val()) {
+        $('#application_date').datetimepicker({locale: 'uk',format: 'L',date:moment()})
+        $('#application_time').datetimepicker({locale: 'uk',format: 'HH:mm',stepping:'15',date:moment()})
+    }
+    let select_options = {
+        'owner_id':'',
+        'master_type':''
+    }
+        function clear_options(target_id) {
+            $('#' + `${target_id} option:not([value=''])`).remove()
+        }
+    {% block ajax_link_set %} {% endblock %}
+    function get_values(values) {
+        $.ajax({
+            type: 'GET',
+            url: {% block ajax_url %}'{% url 'application_create' %}'{% endblock %},
+            data: select_options,
+            success: function (data) {
+                console.log(data)
+                if(data['apartments']){
+                    clear_options('id_apartment')
+                    data['apartments'].forEach(
+                    function (item) {
+                        $('#id_apartment').append($('<option>').val(item['id'])
+                            .text(`Квартира №${item['number']}, ${item['house__name']}`));
+                    }
+                );
+                }
+                if(data['masters']){
+                    clear_options('id_master')
+                    data['masters'].forEach(
+                    function (item) {
+                        $('#id_master').append($('<option>').val(item['id'])
+                            .text(`${item['role__role']} - ${item['first_name']} ${item['last_name']}`));
+                    }
+                );
+                }
+                if (values) {
+                    values.forEach(function (item) {
+                        $(`${item['target']}`).val(item['value']).change()
+                    })
+                }
+            }
+        })
+    }
+    function set_event_listeners(){
+        $('#id_owner').change(function() {
+        select_options['owner_id'] = this.value;
+        select_options['owner_change'] = 'True';
+        get_values();
+        select_options['owner_change'] = ''
+
+    })
+    $('#id_master_type').change(function() {
+        select_options['master_type'] = this.value
+        select_options['master_type_change'] = 'True'
+        get_values();
+        select_options['master_type_change'] = ''
+    })
+    }
+
+
+        $(document).ready(function ()
+            {
+                let select_apartment =$('#id_apartment').select2({placeholder: "Виберіть...", allowClear:true})
+                let select_master =$('#id_master').select2({placeholder: "Виберіть..."})
+                let select_master_type =$('#id_master_type').select2({minimumResultsForSearch: Infinity})
+                let select_owner =$('#id_owner').select2({placeholder: "Виберіть...", allowClear:true})
+                $('#id_status').select2({placeholder: "Виберіть...",minimumResultsForSearch: Infinity})
+                set_event_listeners()
+            }
+
+        )
+
+    </script>
+    <script>
+            $( "#application_form" ).validate( {
+rules: {
+apartment: "відповідно",
+master: "required",
+description: "відповідно",
+},
+messages: {
+apartment: "Будь ласка, виберіть квартиру.",
+master: "Будь ласка, виберіть майстра.",
+description: "Будь ласка, опишіть свою проблему.",
+},
+errorElement: "em",
+errorPlacement: function ( error, element ) {
+error.addClass( "help-block");
+element.parents( ".form-group" ).addClass( "has-feedback" );
+if ( element.prop( "type" ) === "checkbox" ) {
+error.insertAfter( element.parent( "label" ) );
+} else {
+                        if($(element).hasClass('select2-hidden-accessible')){
+                            error.insertAfter( $(element).parent('.form-group').find('.select2') );
+                        }
+                        else error.insertAfter( element );
+}
+},
+success: function ( label, element ) {
+},
+highlight: function ( element, errorClass, validClass ) {
+$( element ).parents( ".form-group" ).addClass( "has-error" ).removeClass( "has-success" );
+},
+unhighlight: function ( element, errorClass, validClass ) {
+$( element ).parents( ".form-group" ).addClass( "has-success" ).removeClass( "has-error" );
+}
+} );
+             $("select").on("select2:close", function (e) {
+        $(this).valid();
+    });
+    </script>
+    {% block update_script %}
+
+    {% endblock %}
+{% endblock %}

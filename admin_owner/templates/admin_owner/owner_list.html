@@ -1,0 +1,331 @@
+{% extends 'layout/admin_panel.html' %}
+{% load static %}
+{% block title %}Власники квартир{% endblock %}
+{% block header_text %}
+    Власники квартир
+{% endblock %}
+{% block breadcrumb %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'statistic' %}"><i class="fa fa-home"></i> Головна</a></li>
+        <li class="active">Власники квартир</li>
+    </ul>
+{% endblock %}
+{% block head %}
+    <link rel="stylesheet"
+          href="{% static 'admin_panel/plugins/bootstrap-datepicker-1.9.0-dist/css/bootstrap-datepicker3.min.css' %}"/>
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="btn-group pull-right margin-bottom">
+                <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                    Виберіть дію <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a href="{% url 'owner_create' %}">Додати власника квартири</a></li>
+                    <li><a href="{% url 'message_create_has_debt' 1 %}">Надіслати повідомлення боржникам</a></li>
+                    <li><a href="{% url 'owner_invite' %}">Надіслати запрошення</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="box">
+                <div class="box-header with-border">
+                    <h3 class="box-title"></h3>
+                    <div class="box-tools">
+                        <button onclick="clear_filters()" class="btn btn-default btn-sm">
+                            <span class="hidden-xs">Очистити</span><i class="fa fa-eraser visible-xs"
+                                                                      aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="w0" class="grid-view">
+                    <div class="box-body table-responsive no-padding">
+                        <table id="table_owners" class="table table-bordered table-hover table-striped linkedRow">
+                            <thead>
+                            <tr>
+                                <th style="width: 50px; min-width: 10px">ID</th>
+                                <th><a id="name" class="ordering">ПІБ</a></th>
+                                <th style="width: 140px; min-width: 140px">Телефон</th>
+                                <th style="width: 140px; min-width: 140px">Email</th>
+                                <th style="min-width: 250px">Будинок</th>
+                                <th style="min-width: 300px">Квартира</th>
+                                <th style="width: 110px; min-width: 110px"><a
+                                        id="date_joined" class="ordering">Додано</a>
+                                </th>
+                                <th>Статус</th>
+                                <th style="width: 80px; min-width: 80px">Є борг</th>
+                                <th style="width: 114px; min-width: 114px"> </th>
+                            </tr>
+                            <tr id="w0-filters" class="filters">
+                                <td><input id="uid" type="text" class="form-control column_search"></td>
+                                <td><input id="name" type="text" class="form-control column_search"></td>
+                                <td><input id="phone" type="text" class="form-control column_search"></td>
+                                <td><input id="email" type="text" class="form-control column_search"></td>
+                                <td><select id="house" class="form-control select2 filter">
+                                    <option value=""></option>
+                                    {% for house in house_list %}
+                                        <option value="{{ house.pk }}">{{ house }}</option>
+                                    {% endfor %}
+
+                                </select>
+                                </td>
+                                <td><input id="apartment" type="text" class="form-control column_search"></td>
+                                <td><input type="text" id="date"
+                                           class="form-control"></td>
+                                <td><select id="status" class="form-control select2 filter">
+                                    <option value=""></option>
+                                    {% for status in status_list %}
+                                        <option value="{{ status }}">{{ status }}</option>
+                                    {% endfor %}
+
+                                </select>
+                                </td>
+                                <td><select id="owner_has_debt" class="form-control select2 filter">
+                                    <option value=""></option>
+                                    <option value="1">Так</option>
+                                </select>
+                                </td>
+                                <td> </td>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="box-footer clearfix">
+                        <div class="pagination pagination-sm no-margin pull-right"></div>
+                    </div>
+                </div>
+                <div class="box-footer">
+                    <div>Кількість власників: <span class="text-bold" id="owner_count"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    <script>
+        $('#nav_owners').attr('class', 'active')
+    </script>
+    <script src="{% static 'admin_panel/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/select2/dist/js/i18n/uk.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/moment/moment.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/moment/locale/uk.js' %}"></script>
+    <script src="{% static 'admin_panel/plugins/bootstrap-datepicker-1.9.0-dist/js/bootstrap-datepicker.min.js' %}"></script>
+
+    <script>
+        let table_head = $('#table_owners thead')
+        let colors = {
+            'Активний': 'label label-success',
+            'Вимкнений': 'label label-danger',
+            'Новий': 'label label-warning',
+        }
+        let sort_data = {
+            "name": '',
+            "Role": '',
+            "phone": '',
+            "username": '',
+            "status": '',
+            "order_by": ''
+        }
+        let order_by = ''
+        let table
+
+        function clear_filters() {
+            $('.column_search').val('');
+            $('#date').val('');
+            table_head.unbind();
+            $('.filter').val('').change()
+            $('.ordering').attr('class', 'ordering');
+            set_filters_listener()
+            let keys = Object.keys(sort_data)
+            keys.forEach(function (item) {
+                sort_data[item] = ''
+            })
+            numb = 0
+            table.draw()
+
+        }
+
+
+        function send_POST(e) {
+            table = $('#table_owners').DataTable({
+                serverSide: true,
+                processing: false,
+                oLanguage: {
+                    sZeroRecords: "Нічого не знайдено."
+                },
+
+                columnDefs: [
+                    {className: "owner", "targets": [0, 1, 2, 3, 4, 5, 6, 7]},
+                    {targets: '_all', defaultContent: ''},
+                ],
+                "ajax": {
+                    "processing": true,
+                    "url": "{% url 'owner_list' %}",
+                    "data": function (d) {
+                        return Object.assign(d, sort_data);
+                    },
+                    "dataSrc": function (data) {
+                        console.log(data)
+                        $('#owner_count').text(data['data'].length)
+                        return data['data']
+                    },
+                },
+                "columns": [
+                    {data: "uid"},
+                    {"data": "name"},
+                    {"data": "phone"},
+                    {"data": "username"},
+                    {
+                        "data": "apartment",
+                        render: function (data) {
+                            if (data.length === 0) {
+                                return "(не встановлено)"
+                            }
+                            let houses = []
+                            data.forEach(function (item) {
+                                let link_view = '{% url 'house_view' 12345 %}'.replace(/12345/, item['house_id'])
+                                let house = `<a href="${link_view}">${item['house__name']}</a>`
+                                if (!houses.includes(house)) {
+                                    houses.push(house)
+                                }
+                            })
+                            return houses.join(',<br>')
+                        }
+                    },
+                    {
+                        "data": "apartment",
+                        render: function (data) {
+                            if (data.length === 0) {
+                                return "(не встановлено)"
+                            }
+                            let apartments = []
+                            data.forEach(function (item) {
+                                let link_view = '{% url 'apartment_view' 12345 %}'.replace(/12345/, item['id'])
+                                let apartment = `<a href="${link_view}">Квартира №${item['number']}, ${item['house__name']}</a>`
+                                apartments.push(apartment)
+                            })
+                            return apartments.join(',<br>')
+                        }
+                    },
+                    {
+                        "data": 'date_joined',
+                        render: function (data) {
+                            return moment.utc(data).format('DD.MM.YYYY')
+                        }
+                    },
+                    {
+                        data: "status",
+                        render: function (data, type) {
+                            return `<small class="${colors[data]}">${data}</small>`;
+                        }
+                    },
+                    {
+                        data: 'has_debt',
+                        render: function (data) {
+                            if (data) {
+                                return 'Так'
+                            } else {
+                                return 'Ні'
+                            }
+                        }
+                    },
+
+                    {
+                        data: "id",
+                        render: function (data, type) {
+                            let link_update = '{% url 'owner_update' 12345 %}'.replace(/12345/, data)
+                            let link_delete = '{% url 'owner_delete' 12345 %}'.replace(/12345/, data)
+                            let link_message = '{% url 'message_create_owner' 12345 %}'.replace(/12345/, data)
+                            return `<div class="btn-group pull-right"><a class="btn btn-default btn-sm"
+                                    href="${link_message}" title="Надіслати повідомлення" data-toggle="tooltip">
+                                    <i class="fa fa-envelope"></i></a>
+                                    <a class="btn btn-default btn-sm" href="${link_update}" title="Редагувати"
+                                    data-toggle="tooltip"><i class="fa fa-pencil"></i></a>
+                                    <a class="btn btn-default btn-sm" title="Видалити" data-toggle="tooltip"
+                                    data-pjax="0" id="delete_user"
+                                    onmousedown="return confirm_delete('${link_delete}',event);">
+                                    <i class="fa fa-trash"></i></a></div>`
+                        },
+                    }
+                ],
+                paging: true,
+                'pageLength': 10,
+                'lengthChange': false,
+                initComplete: (settings, json) => {
+                    $('.dataTables_paginate').appendTo('.pagination-sm');
+                },
+                searching: false,
+                ordering: false,
+                info: false,
+            });
+        }
+
+        function set_filters_listener() {
+            table_head.on('change', ".filter", function a(e) {
+                sort_data[this.id] = $(this).val()
+                table.draw()
+            });
+            table_head.on('keyup', ".column_search", function a(e) {
+                sort_data[this.id] = $(this).val()
+                table.draw()
+            });
+            table_head.on('click', '.ordering', function() {
+                if (this.className === 'ordering asc') {
+                    $(this).attr('class', 'ordering desc')
+                    sort_data['order_by'] = '-' + this.id
+                } else {
+                    $(this).attr('class', 'ordering asc')
+                    sort_data['order_by'] = this.id
+                }
+                table_head.find('.ordering').not(this).attr('class', 'ordering')
+                table.draw()
+            })
+
+        }
+
+
+        $(document).ready(function() {
+            send_POST();
+            $('.column_search').val('');
+            $('.select2').select2().val('');
+            set_filters_listener()
+            $('#date').datepicker({
+                language: 'ru',
+                format: 'dd.mm.yyyy',
+                orientation: 'bottom'
+                {#autoclose: true#}
+            }).change(function () {
+                sort_data['date_year'] = moment(this.value, 'DD.MM.YYYY').format('YYYY')
+                sort_data['date_month'] = moment(this.value, 'DD.MM.YYYY').format('M')
+                sort_data['date_day'] = moment(this.value, 'DD.MM.YYYY').format('D')
+                table.draw()
+            })
+
+        });
+
+        function confirm_delete(link, event) {
+            alertify.confirm('Підтвердження видалення', 'Видалити користувача <b>'
+                + $(event.target).closest("tr ").children().eq(1).text() + '</b> ?',
+                function () {
+                    window.location.href = link
+                },
+                function () {
+                }).set({labels: {ok: 'Підтвердити', cancel: 'Скасувати'}});
+            return false;
+        }
+
+        $('#table_owners').on('click', 'tbody tr .owner', function () {
+            window.location.href = '{% url 'owner_view' 12345 %}'.replace(/12345/, table.row(this).data().id)
+        })
+
+    </script>
+{% endblock %}

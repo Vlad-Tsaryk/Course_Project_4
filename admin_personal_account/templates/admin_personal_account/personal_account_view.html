@@ -1,0 +1,139 @@
+{% extends 'layout/admin_panel.html' %}
+
+{% block content %}
+
+
+    <div class="row">
+        <div class="col-xs-12 col-md-7 col-lg-6">
+            <div class="page-header-spec">
+                <div class="form-group">
+                    <div class="input-group date">
+                        <div class="input-group-addon">
+                            №
+                        </div>
+                        <div class="form-control pull-right">{{personalaccount.number }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="box">
+        <div class="box-header with-border">
+            <h3 class="box-title">Перегляд особового рахунку</h3>
+            <div class="box-tools">
+                <a {% if personalaccount.apartment %}
+                    href="{% url 'transaction_create_personal_account' 'income' personalaccount.pk %}"
+                    class="btn btn-default btn-sm"
+                {% else %}
+                    class="btn btn-default btn-sm disabled"
+                {% endif %}>
+                    <span class="hidden-xs"><i class="fa fa-dollar"></i> Прийняти платіж</span>
+                    <i class="fa fa-dollar visible-xs" aria-hidden="true"></i>
+                </a>
+                <a {% if personalaccount.apartment %}
+                    href="{% url 'receipt_create_personal_account' personalaccount.number %}"
+                    class="btn btn-default btn-sm"
+                {% else %}
+                    class="btn btn-default btn-sm disabled"
+                {% endif %}>
+                    <span class="hidden-xs"><i class="fa fa-files-o"></i> Оформити квитанцію</span>
+                    <i class="fa fa-files-o visible-xs" aria-hidden="true"></i>
+                </a>
+                <a href="{% url 'personal_account_update' personalaccount.pk %}" class="btn btn-primary btn-sm">
+                    <span class="hidden-xs">Редагувати рахунок</span><i class="fa fa-pencil visible-xs"
+                                                                        aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+        <div class="box-body">
+            <div class="row">
+                <div class="col-xs-12">
+                    <table class="table table-bordered table-striped table-view">
+                        <tbody>
+                        <tr>
+                            <td>Статус</td>
+                            <td><small class="label label-{% if personalaccount.status == 'Активний' %}success
+                            {% else %}danger
+                            {% endif %}">{{personalaccount.status}}</small></td>
+                        </tr>
+                        <tr>
+                            <td>Будинок</td>
+                            <td>
+                                {% if personalaccount.apartment.house %}
+                                    <a href="{% url 'house_view' personalaccount.apartment.house_id %}">
+                                        {{personalaccount.apartment.house.name}}
+                                    </a>
+                                {% else %}
+                                    {{personalaccount.apartment.house.name}}
+                                {% endif %}
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Секція</td>
+                            <td>{{personalaccount.apartment.section.name}}</td>
+                        </tr>
+                        <tr>
+                            <td>Квартира</td>
+
+                            <td>
+                                {% if personalaccount.apartment %}
+                                    <a href="{% url 'apartment_view' personalaccount.apartment_id %}">
+                                        {{personalaccount.apartment.number}}</a>
+                                {% else %}
+                                    {{personalaccount.apartment.number}}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Власник</td>
+                            <td>
+                                {% if personalaccount.apartment.owner %}
+                                    <a href="{% url 'owner_view' personalaccount.apartment.owner_id %}">
+                                        {{personalaccount.apartment.owner}}</a>
+                                {% else %}
+                                    {{personalaccount.apartment.owner}}
+                                {% endif %}
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Залишок, грн.</td>
+                            <td>{% with personalaccount.balance as balance %}
+                                <span class="text-{% if balance > 0 %}green{% elif balance < 0 %}red{% else %}default
+                                {% endif %}">{{ balance }}</span>
+                            {% endwith %}
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div>
+                        <p><a {% if personalaccount.apartment %}
+                            href="{% url 'meter-view-list-apart' personalaccount.apartment_id %}"
+                        {% else %}
+                            style="cursor: not-allowed; color: grey"
+                        {% endif %}
+                        >Подивитися показання лічильників</a></p>
+                        <p>
+                            <a {% if personalaccount.apartment %}
+                                href="{% url 'transaction_list_personal_account' personalaccount.number %}"
+                            {% else %}
+                                style="cursor: not-allowed; color: grey"
+                            {% endif %}>Подивитися
+                                парафії</a></p>
+                        <p><a {% if personalaccount.apartment %}
+                            href="{% url 'receipt_list_apartment' personalaccount.apartment.number %}"
+                        {% else %}
+                            style="cursor: not-allowed; color: grey"
+                        {% endif %}>Подивитися квитанції</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+        $('#nav_account').attr('class', 'active')
+    </script>
+{% endblock %}

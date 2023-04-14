@@ -1,0 +1,216 @@
+{% extends 'layout/admin_panel.html' %}
+{% load static %}
+{% block header_text %}
+    Редагування послуг
+{% endblock %}
+{% block title %}Редагування послуг{% endblock %}
+{% block head %}
+        Редагування послуг
+{% endblock %}
+
+{% block content %}
+    <div class="box">
+        <div class="box-body">
+            <form id="w0" method="post" class="needs-validation">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-xs-12 col-lg-7">
+                        <div class="nav-tabs-custom">
+                            <ul class="nav nav-tabs">
+                                <li class="active"><a href="#tab_service" data-toggle="tab" aria-expanded="true">Послуги</a>
+                                </li>
+                                <li class=""><a href="#tab_unit" data-toggle="tab" aria-expanded="false">Одиниці
+                                    вимірювання</a></li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane clearfix active" id="tab_service">
+                                                                        <div id="empty-service" class="row form-service" hidden>
+                                        {{service_formset.empty_form.id}}
+                                                <div class="col-xs-12 col-sm-7">
+                                                <div class="form-group">
+                                                    <label for="{{service_formset.empty_form.prefix }}-name">Послуга</label>
+                                                    {{service_formset.empty_form.name}}
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-12 col-sm-5">
+                                                <div class="form-group">
+                                                    <label for="{{service_formset.empty_form.prefix }}-service_unit_id">Од. вим.</label>
+                                                    <div class="input-group">
+                                                        {{service_formset.empty_form.unit}}
+                                                        <span class="input-group-btn">
+                                                        <div hidden>{{service_formset.empty_form.DELETE }}</div>
+                    <button type="button" class="btn btn-default form-row-remove-btn"
+                    onclick="delete_form('{{ service_formset.empty_form.prefix }}')">
+                        <i
+                            class="fa fa-trash"></i></button> </span>
+                                        </div>
+
+                                    </div>
+                                            </div>
+                                            <div class="col-xs-12">
+                                                <label>{{service_formset.empty_form.is_counter}} Показувати в
+                                                лічильниках</label>
+                                                <div style="margin-bottom: 16px;"></div>
+                                            </div>
+                                        </div>
+                                    <div id="form-service-rows">
+                                        {{service_formset.management_form}}
+
+                                        {% for service in service_formset %}
+                                        <div id="form-service-{{forloop.counter0}}" class="row form-service">
+                                            <div class="col-xs-12 col-sm-7">
+                                                {% for hidden in service.hidden_fields %}
+                                            {{ hidden }}
+                                        {% endfor %}
+                                                <div class="form-group">
+                                                    <label for="service-{{forloop.counter0}}-name">Послуга</label>
+                                                    {{service.name}}
+                                                    {% if service.name.errors %}
+                                                    <em id="id_service-{{forloop.counter0}}-name-error"
+                                                     class="error help-block" style="color: red">
+                                                     {{service.name.errors|join:". "}}</em>
+                                                        {% endif %}
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-12 col-sm-5">
+                                                <div class="form-group">
+                                                    <label for="service-{{forloop.counter0}}-service_unit_id">Од. вим.</label>
+                                                    <div class="input-group">
+                                                        {{service.unit}}
+                                                        <span class="input-group-btn">
+                                                            {% if service.instance.in_usage %}
+                                                            <button type="button"
+                                                                class="btn btn-default form-row-remove-btn disabled"
+                                                                title="{{ service.instance.in_usage}}. Видалення неможливе.">
+                                                                <i class="fa fa-trash"></i></button>
+                                                            {% else %}
+                                                                                                    <div hidden>{{service.DELETE }}</div>
+                                                                <button type="button"
+                                                                class="btn btn-default form-row-remove-btn"
+                                                                onclick="delete_form('{{service.prefix}}')">
+                                                                <i class="fa fa-trash"></i></button>
+                                                            {% endif %}
+{# <div hidden>{{ service.DELETE }}</div>#}
+{# <button type="button" class="btn btn-default form-row-remove-btn"#}
+{# onclick="delete_form('id_{{ service.prefix }}-DELETE')"#}
+{##}
+                    {# title="Ця послуга використовується у квитанціях. Видалення неможливе."#}>
+{##}
+{# <i#}
+{# class="fa fa-trash"></i></button>#}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xs-12">
+                                                <label>{{service.is_counter}} Показувати в
+                                                лічильниках</label>
+                                                <div style="margin-bottom: 16px;"></div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <button type="button"
+                                            class="btn btn-default btn-hover-change pull-left form-row-add-service-btn"
+                                            id="add_service">
+                                        Додати
+                                    </button>
+                                </div>
+
+
+                                <div class="tab-pane clearfix" id="tab_unit">
+                                <div id="empty-unit" class="row form-unit" hidden>
+                                    {{ unit_formset.empty_form.id }}
+                                    <div class="col-xs-12">
+                                                <div class="form-group">
+                                                    <label for="{{ unit_formset.empty_form.prefix }}-name">Од. вим.</label>
+                                                    <div class="input-group">
+                                                        {{unit_formset.empty_form.name}} <span
+                                                            class="input-group-btn">
+                    <div hidden>{{ unit_formset.empty_form.DELETE }}</div>
+                                                                <button type="button"
+                                                                class="btn btn-default form-row-remove-btn"
+                                                                onclick="delete_form('{{ unit_formset.empty_form.prefix }}')">
+                                                                <i class="fa fa-trash"></i></button> </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                                    </div>
+                                    <div id="form-unit-rows">
+                                    {{ unit_formset.management_form }}
+
+                                        {% for unit in unit_formset %}
+                                        <div id="form-unit-{{forloop.counter0}}" class="row form-unit">
+                                            <div class="col-xs-12">
+                                                {% for hidden in unit.hidden_fields %}
+                                            {{ hidden }}
+                                        {% endfor %}
+                                                <div class="form-group">
+                                                    <label for="unit-{{forloop.counter0}}-name">Од. вим.</label>
+                                                    <div class="input-group">
+                                                        {{unit.name}} <span
+                                                            class="input-group-btn">
+                                                            {% if unit.instance.used_in_service %}
+                                                            <button type="button"
+                                                                class="btn btn-default form-row-remove-btn disabled"
+                                                                title="Ця од.ізм. використовується в послузі. Видалення неможливе.">
+                                                                <i class="fa fa-trash"></i></button>
+                                                            {% else %}
+                                                                                                    <div hidden>{{ unit.DELETE }}</div>
+                                                                <button type="button"
+                                                                class="btn btn-default form-row-remove-btn"
+                                                                onclick="delete_form('unit-{{ forloop.counter0 }}')">
+                                                                <i class="fa fa-trash"></i></button>
+                                                            {% endif %}
+
+
+                            </span>
+                                                    </div>
+                                                    {% if unit.name.errors %}
+                                                    <em id="id_unit-{{forloop.counter0}}-name-error"
+                                                     class="error help-block" style="color: red">
+                                                     {{ unit.name.errors|join:". "}}</em>
+                                                        {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                    </div>
+                                    <button type="button"
+                                            class="btn btn-default btn-hover-change pull-left form-row-add-unit-btn"
+                                            id="add_unit">
+                                        Додати
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 text-center">
+                        <div class="form-group">
+                            <a href="{% url 'service' %}" class="btn btn-default">Скасувати</a>
+                            <button type="submit" class="btn btn-success">Зберегти</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+{% endblock %}
+{% block scripts %}
+
+        <script>
+        $('#system_settings').attr('class', 'active treeview menu-open')
+        $('#nav_service').attr('class', 'active')
+    </script>
+<script src="{% static 'admin_panel/js/add_delete_form.js' %}"></script>
+<script>
+    const totalServiceForms = $('#id_service-TOTAL_FORMS')
+    const totalUnitForms = $('#id_unit-TOTAL_FORMS')
+    $('#add_service').on('click', function (){add_form('service','empty-service','form-service-rows',totalServiceForms)})
+    $('#add_unit').on('click', function (){add_form('unit','empty-unit','form-unit-rows',totalUnitForms)})
+
+    </script>
+{% endblock %}

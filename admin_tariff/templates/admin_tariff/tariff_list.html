@@ -1,0 +1,129 @@
+{% extends 'layout/admin_panel.html' %}
+{% load static %}
+{% block title %}Тарифи{% endblock %}
+{% block header_text %}
+Тарифи
+{% endblock %}
+{% block breadcrumb %}
+    <ul class="breadcrumb">
+        <li><a href="{% url 'statistic' %}"><i class="fa fa-home"></i>Головна</a></li>
+        <li class="active">Тарифи</li>
+</ul>
+{% endblock %}
+{% block content %}
+
+
+<div class="row">
+    <!--<div class="col-xs-12 col-sm-6">-->
+    <!--<h2 class="page-header">Квартири</h2>-->
+    <!--</div>-->
+    <div class="col-xs-12">
+
+        <div class="pull-right margin-bottom">
+            <a class="btn btn-success" href="{% url 'tariff_create' %}">Додати тариф</a>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-xs-12">
+        <div class="box">
+            <div id="w0" class="grid-view">
+                <div class="box-body table-responsive no-padding">
+                <table id="tariff_table" class="table table-bordered table-hover table-striped linkedRow"><thead>
+<tr>
+    <th>Назва тарифу</th>
+    <th>Опис тарифу</th>
+    <th>Дата редагування</th>
+    <th style="width: 114px; min-width: 114px"> </th>
+</tr>
+</thead>
+<tbody>
+{% for tariff in tariff_list %}
+    <tr data-href="{% url 'tariff_view' tariff.pk %}" data-key="tariff.pk">
+        <td>{{tariff.name}}</td>
+        <td>{{ tariff.description }}</td>
+        <td>{{ tariff.date_edit|date:'d.m.o - H:i' }}</td>
+        <td>
+            <div class="btn-group pull-right">
+                <a class="btn btn-default btn-sm"
+                   href="{% url 'tariff_clone' tariff.pk %}"
+                   title="Копіювати" data-toggle="tooltip">
+                    <i class="fa fa-clone"></i></a>
+
+                <a class="btn btn-default btn-sm" href="{% url 'tariff_update' tariff.pk %}"
+                   title="Редагувати" data-toggle="tooltip"><i class="fa fa-pencil"></i></a>
+
+                <a class="btn btn-default btn-sm"
+                   onmousedown="return confirm_delete('{% url 'tariff_delete' tariff.pk %}',event)"
+                   title="Видалити" data-toggle="tooltip" data-pjax="0" data-method="post">
+                    <i class="fa fa-trash"></i></a>
+            </div>
+        </td>
+    </tr>
+{% endfor %}
+</tbody></table></div>
+<div class="box-footer clearfix"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+{% block scripts %}
+    <script>
+        $('#system_settings').attr('class', 'active treeview menu-open')
+        $('#nav_tariff').attr('class', 'active')
+    </script>
+        <script src="{% static 'admin_panel/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'admin_panel/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+
+    <script>
+            $('#tariff_table').DataTable({
+                order: [],
+            rowReorder: true,
+            columnDefs: [
+                {orderable: false, className: 'reorder', targets: 3},
+                {orderable: true, targets: '_all'}
+            ],
+            {# ordering: true,#}
+            paging: true,
+
+'lengthChange': false,
+            {#"pagingType": "full_numbers",#}
+            {#"pagingType": "scrolling",#}
+            {#'sPaginationType': 'ellipses',#}
+            {#scrollX: true,#}
+            searching: false,
+
+            info: false,
+        })
+                    $('#purpose_table').DataTable({
+            rowReorder: true,
+            columnDefs: [
+                {orderable: false, className: 'reorder', targets: 2},
+                {orderable: true, targets: '_all'}
+            ],
+            paging: true,
+
+'lengthChange': false,
+            {#"pagingType": "full_numbers",#}
+            {#"pagingType": "scrolling",#}
+            {#'sPaginationType': 'ellipses',#}
+            {#scrollX: true,#}
+            searching: false,
+
+            info: false,
+        })
+                    function confirm_delete (link, event) {
+            alertify.confirm('Підтвердження видалення', 'Видалити тариф <b>'
+                + $(event.target).closest("tr").children().eq(0).text() + '</b> ?',
+                function () {
+                window.location.href = link
+                },
+                function () {
+                }).set({labels: {ok: 'Підтвердити', cancel: 'Скасувати'}});
+                return false;
+        }
+    </script>
+{% endblock %}
